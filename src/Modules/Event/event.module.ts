@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { EventService } from './event.service';
 import { EventController } from './event.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Event, EventSchema } from 'src/Entities/Event/event.schema';
 import { ConfigModule } from '@nestjs/config';
 import { EventRepository } from './Repository/event.repository';
+import { EventService } from './Services/event.service';
 
 @Module({
   imports: [

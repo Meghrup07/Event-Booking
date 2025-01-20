@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BookingController } from './booking.controller';
-import { BookingService } from './booking.service';
+import { BookingService } from './Services/booking.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Booking, BookingSchema } from 'src/Entities/Booking/booking.schema';
 import { Event, EventSchema } from 'src/Entities/Event/event.schema';
@@ -16,4 +16,4 @@ import { BookingRepository } from './Repository/booking.repository';
     providers: [BookingService, BookingRepository],
     controllers: [BookingController]
 })
-export class BookingModule {}
+export class BookingModule { }

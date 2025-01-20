@@ -1,11 +1,11 @@
 import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
-import { EventService } from './event.service';
 import { JwtAuthGuard } from 'src/Common/Guards/jwt.guard';
 import { RolesGuard } from 'src/Common/Guards/roles.guard';
 import { Roles } from 'src/Common/Decorators/roles.decorator';
 import { Types } from 'mongoose';
 import { EventDTO } from 'src/Modules/Event/DTOs/eventDTO';
 import { QueryParamDTO } from 'src/Common/Params/query-paramDTO';
+import { EventService } from './Services/event.service';
 
 @Controller('event')
 export class EventController {

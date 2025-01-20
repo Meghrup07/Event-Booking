@@ -3,30 +3,35 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { BookingDTO } from 'src/Modules/Booking/DTOs/bookingDTO';
 import { Event, EventDocument } from 'src/Entities/Event/event.schema';
-import { BookingRepository } from './Repository/booking.repository';
+import { BookingRepository } from '../Repository/booking.repository';
+import { IBookingService } from './booking.service.interface';
 
 @Injectable()
-export class BookingService {
+export class BookingService implements IBookingService {
     constructor(
-        @InjectModel(Event.name) private eventModel:Model<EventDocument>,
+        @InjectModel(Event.name) private eventModel: Model<EventDocument>,
         private bookingRepository: BookingRepository
-    ){}
+    ) { }
 
 
-    async bookTicket(@Body() bookingDTO:BookingDTO){
+    async bookTicket(@Body() bookingDTO: BookingDTO) {
 
         if (!Types.ObjectId.isValid(bookingDTO.eventId)) {
             throw new BadRequestException('Invalid Event ID format');
         }
 
         const event = await this.eventModel.findById(bookingDTO.eventId);
-        if(!event) throw new BadRequestException('Event not found');
+        if (!event) throw new BadRequestException('Event not found');
 
         if (!event.bookedSeats) {
             event.bookedSeats = [];
-        }    
+        }
 
-        if(event.bookedSeats.includes(bookingDTO.seatNumber)){
+        if (event.date < new Date()) {
+            throw new BadRequestException('Event is expired');
+        }
+
+        if (event.bookedSeats.includes(bookingDTO.seatNumber)) {
             throw new BadRequestException('Seat is already booked');
         }
 
@@ -49,27 +54,27 @@ export class BookingService {
             data: bookings.map(booking => {
                 const event = booking.eventId as any;
                 return {
-                _id: booking._id,
-                userId: booking.userId,
-                eventId: event._id,
-                eventName: event.eventName,
-                eventType: event.eventType,
-                date: event.date,
-                seatNumber: booking.seatNumber,
-                __v: booking.__v,
+                    _id: booking._id,
+                    userId: booking.userId,
+                    eventId: event._id,
+                    eventName: event.eventName,
+                    eventType: event.eventType,
+                    date: event.date,
+                    seatNumber: booking.seatNumber,
+                    __v: booking.__v,
                 };
             }),
         }
     }
 
 
-    async cancelBooking(id: string){
+    async cancelBooking(id: string) {
         if (!Types.ObjectId.isValid(id)) {
             throw new BadRequestException('Invalid Booking ID format');
         }
 
         const booking = await this.bookingRepository.cancelBooking(id);
-        if(!booking) throw new BadRequestException('Booking not found');
+        if (!booking) throw new BadRequestException('Booking not found');
 
         const event = await this.eventModel.findById(booking.eventId);
         if (!event) {
@@ -85,7 +90,7 @@ export class BookingService {
             status: 200
         }
     }
-    
-    
+
+
 
 }
