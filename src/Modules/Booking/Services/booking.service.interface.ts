@@ -1,10 +1,10 @@
 import { BookingDTO } from "../DTOs/bookingDTO";
 
-export interface IBookingService {
+export interface IBookingService{
 
-    bookTicket(bookingDTO: BookingDTO);
+    bookTicket(bookingDTO:BookingDTO);
 
-    getUserBookings(userId: string);
+    getUserBookings(userId: string)
 
     cancelBooking(id: string);
 }

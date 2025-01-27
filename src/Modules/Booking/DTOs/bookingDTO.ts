@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsNotEmpty, IsString } from "class-validator";
 
 export class BookingDTO{
     @IsString()
@@ -9,7 +9,13 @@ export class BookingDTO{
     @IsNotEmpty()
     eventId: string
 
+    @IsArray()
+    @ArrayNotEmpty()
+    @IsString({ each: true })
+    seatNumber: string[]
+
     @IsString()
     @IsNotEmpty()
-    seatNumber: string
+    bookingDate: string
 }
+

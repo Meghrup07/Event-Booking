@@ -1,45 +1,68 @@
 import { BadRequestException, Body, Injectable, NotFoundException } from '@nestjs/common';
-import { UpdateUserDTO } from 'src/Modules/User/DTOs/UpdateUserDTO';
 import { UserRepository } from '../Repository/user.repository';
+import { UpdateUserDTO } from 'src/Modules/User/DTOs/UpdateUserDTO';
+import { IUserService } from './user.service.interface';
 
 @Injectable()
-export class UserService {
+export class UserService implements IUserService {
     constructor(private userRepository: UserRepository) { }
 
     async updateUser(id: string, @Body() updateUserDTO: UpdateUserDTO) {
+
         const user = await this.userRepository.findByEmail(updateUserDTO.email);
         if (user && user.id !== id) {
-            throw new BadRequestException('Email already exists');
+            throw new BadRequestException({
+                message: 'Email already exists',
+                status: false
+            });
         }
         await this.userRepository.updateUser(id, updateUserDTO);
 
         return {
-            message: 'Event updated successfully',
-            status: 200
+            message: 'User updated successfully',
+            status: true
         }
+
     }
 
     async getUser(id: string) {
-        const user = await this.userRepository.findById(id);
+
+        const user = this.userRepository.findById(id);
         if (!user) {
-            throw new NotFoundException("User not found");
+            throw new NotFoundException({
+                message: 'User not found',
+                status: false
+            });
         }
         return user;
+
     }
 
     async getAllUser() {
+
         const users = await this.userRepository.findAll();
         return {
-            data: users
+            data: users,
+            message: 'Users get successfully',
+            status: true
         }
+
     }
 
     async deleteUser(id: string) {
+
         const user = await this.userRepository.deleteUser(id);
         if (!user) {
-            throw new NotFoundException("User not found");
+            throw new NotFoundException({
+                message: 'User not found',
+                status: false
+            });
         }
-        return user;
+        return {
+            message: 'User deleted successfully',
+            status: true
+        }
+
     }
 
 }

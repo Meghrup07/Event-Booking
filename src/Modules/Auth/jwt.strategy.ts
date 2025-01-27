@@ -1,12 +1,13 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from '@nestjs/passport'
 import { Strategy, ExtractJwt } from 'passport-jwt'
+import { AuthRepository } from "./Repository/auth.repository";
 
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy){
-    
-    constructor(){
+export class JwtStrategy extends PassportStrategy(Strategy) {
+
+    constructor(private authRepository: AuthRepository) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
@@ -15,7 +16,14 @@ export class JwtStrategy extends PassportStrategy(Strategy){
     }
 
 
-    async validate(payload: any){
+    async validate(payload: any) {
+        const user = await this.authRepository.findByEmail(payload.email);
+        if (!user || user.isTokenExpire) {
+            throw new UnauthorizedException({
+                message: 'Token has expired',
+                statu: false
+            });
+        }
         return {
             id: payload.sub,
             email: payload.email,

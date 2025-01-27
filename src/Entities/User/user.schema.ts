@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose"
 import { Document } from "mongoose"
 
 @Schema()
-export class User{
+export class User {
 
     @Prop({
         required: true,
@@ -22,20 +22,32 @@ export class User{
 
     @Prop({
         required: true,
-        unique: true,        
+        unique: true,
     })
     email: string;
 
     @Prop({
         required: true
     })
-    password:string;
+    password: string;
 
     @Prop({
         required: true,
         default: 'user'
     })
-    role:string;
+    role: string;
+
+    @Prop({
+        required: false,
+        default: null,
+    })
+    token: string;
+
+    @Prop({
+        required: false,
+        default: false,
+    })
+    isTokenExpire: boolean;
 
 }
 

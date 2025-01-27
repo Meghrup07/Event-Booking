@@ -1,13 +1,11 @@
 import { UpdateUserDTO } from "../DTOs/UpdateUserDTO";
 
-export interface IUserService {
-
-    updateUser(id: string, updateUserDTO: UpdateUserDTO);
-
-    getUser(id: string);
+export interface IUserService{
+    deleteUser(id:string);
 
     getAllUser();
 
-    deleteUser(id: string);
+    getUser(id:string);
 
+    updateUser(id:string, updateUserDTO: UpdateUserDTO)
 }

@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Injectable } from '@nestjs/common';
+import { BadRequestException, Body, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { BookingDTO } from 'src/Modules/Booking/DTOs/bookingDTO';
@@ -14,28 +14,75 @@ export class BookingService implements IBookingService {
     ) { }
 
 
+    private convert12To24(time12h: string): string {
+        const [time, modifier] = time12h.split(/\s+/);
+        let [hours, minutes] = time.split(':');
+        let hoursNum = parseInt(hours, 10);
+        if (hoursNum === 12) {
+            hoursNum = modifier.toUpperCase() === 'PM' ? 12 : 0;
+        } else if (modifier.toUpperCase() === 'PM') {
+            hoursNum = hoursNum + 12;
+        }
+        return `${hoursNum.toString().padStart(2, '0')}:${minutes}`;
+    }
+
+
     async bookTicket(@Body() bookingDTO: BookingDTO) {
 
         if (!Types.ObjectId.isValid(bookingDTO.eventId)) {
-            throw new BadRequestException('Invalid Event ID format');
+            throw new NotFoundException({
+                message: 'Invalid Event ID format',
+                status: false
+            });
         }
 
         const event = await this.eventModel.findById(bookingDTO.eventId);
-        if (!event) throw new BadRequestException('Event not found');
+        if (!event) {
+            throw new NotFoundException({
+                message: 'Event not found',
+                status: false
+            });
+        }
 
         if (!event.bookedSeats) {
             event.bookedSeats = [];
         }
 
-        if (event.date < new Date()) {
-            throw new BadRequestException('Event is expired');
+        const currentDate = new Date();
+        const eventEndDate = new Date(event.date);
+
+        if (currentDate > eventEndDate) {
+            throw new NotFoundException({
+                message: 'Event has already passed',
+                status: false
+            });
         }
 
-        if (event.bookedSeats.includes(bookingDTO.seatNumber)) {
-            throw new BadRequestException('Seat is already booked');
+        if (eventEndDate.getTime() === currentDate.getTime()) {
+            const endTime24 = this.convert12To24(event.endTime);
+            const [eventEndHours, eventEndMinutes] = endTime24.split(':').map(Number);
+            const currentHours = currentDate.getHours();
+            const currentMinutes = currentDate.getMinutes();
+
+            if (currentHours > eventEndHours ||
+                (currentHours === eventEndHours && currentMinutes > eventEndMinutes)) {
+                throw new BadRequestException({
+                    message: 'Event has ended',
+                    status: false
+                });
+            }
         }
 
-        event.bookedSeats.push(bookingDTO.seatNumber);
+        const alreadyBookedSeats = bookingDTO.seatNumber.filter(seat => event.bookedSeats.includes(seat));
+
+        if (alreadyBookedSeats.length > 0) {
+            throw new BadRequestException({
+                message: `Seats ${alreadyBookedSeats.join(', ')} are already booked`,
+                status: false
+            });
+        }
+
+        event.bookedSeats.push(...bookingDTO.seatNumber);
 
         await event.save();
 
@@ -43,12 +90,13 @@ export class BookingService implements IBookingService {
 
         return {
             message: 'Ticket booked successfully',
-            status: 200
+            status: true
         }
 
     }
 
     async getUserBookings(userId: string) {
+
         const bookings = await this.bookingRepository.findByUserId(userId);
         return {
             data: bookings.map(booking => {
@@ -65,30 +113,44 @@ export class BookingService implements IBookingService {
                 };
             }),
         }
+
     }
 
 
     async cancelBooking(id: string) {
+
         if (!Types.ObjectId.isValid(id)) {
-            throw new BadRequestException('Invalid Booking ID format');
+            throw new NotFoundException({
+                message: 'Invalid Booking ID format',
+                status: false
+            });
         }
 
         const booking = await this.bookingRepository.cancelBooking(id);
-        if (!booking) throw new BadRequestException('Booking not found');
+        if (!booking) {
+            throw new NotFoundException({
+                message: 'Booking not found',
+                status: false
+            });
+        }
 
         const event = await this.eventModel.findById(booking.eventId);
         if (!event) {
-            throw new BadRequestException('Event not found');
+            throw new NotFoundException({
+                message: 'Event not found',
+                status: false
+            });
         }
 
-        event.bookedSeats = event.bookedSeats.filter(seat => seat !== booking.seatNumber);
+        event.bookedSeats = event.bookedSeats.filter(seat => !booking.seatNumber.includes(seat));
         await event.save();
 
         await this.bookingRepository.cancelBooking(id);
         return {
             message: 'Booking cancelled successfully',
-            status: 200
+            status: true
         }
+
     }
 
 

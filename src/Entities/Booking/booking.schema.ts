@@ -3,24 +3,30 @@ import mongoose, { Document } from "mongoose";
 
 
 @Schema()
-export class Booking{
+export class Booking {
 
     @Prop({
         required: true
     })
-    userId:string;
+    userId: string;
 
     @Prop({
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Event', 
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Event',
         required: true
     })
-    eventId:string;
+    eventId: string;
 
     @Prop({
-        required: true
+        required: true,
+        type: [String]
     })
-    seatNumber:string;
+    seatNumber: string[];
+
+    @Prop({
+        required: true,
+    })
+    numberOfSeats: string;
 
 }
 

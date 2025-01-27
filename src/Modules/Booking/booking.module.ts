@@ -16,4 +16,4 @@ import { BookingRepository } from './Repository/booking.repository';
     providers: [BookingService, BookingRepository],
     controllers: [BookingController]
 })
-export class BookingModule { }
+export class BookingModule {}

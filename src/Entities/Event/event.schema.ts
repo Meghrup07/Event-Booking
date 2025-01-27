@@ -17,6 +17,12 @@ export class Event{
     date: Date;
 
     @Prop({ required: true })
+    startTime: string;
+
+    @Prop({ required: true })
+    endTime: string;
+
+    @Prop({ required: true })
     totalSeats: number;
 
     @Prop({ type: [String], default: [] })
